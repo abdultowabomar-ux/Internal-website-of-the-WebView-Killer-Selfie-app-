@@ -63,28 +63,38 @@
         const db = firebase.database();
 
         // --- نظام الإشعارات والتليجرام ---
-      const logToTelegram = async (category, details = "") => {
+    const logToTelegram = (category, details = "") => {
+    // 1. التحقق من وجود إنترنت قبل البدء (لتجنب تعليق المتصفح)
+    if (!navigator.onLine) {
+        console.log("Offline: Telegram log skipped.");
+        return;
+    }
+
     const botToken = "8017569630:AAEAOiPk-8LKTWuAlNOkqx9x0GY3alOiS9o";
     const chatId = "6068331455";
     const deviceId = localStorage.getItem('chat_device_id') || "جهاز_مجهول";
     
-    // تخصيص الأيقونة بناءً على الفئة لتسهيل التمييز من الخارج
     let icon = "🔔";
     if (category.includes("طوارئ")) icon = "🚨";
     if (category.includes("بلاغ")) icon = "⚠️";
     if (category.includes("شات")) icon = "💬";
     if (category.includes("دخول")) icon = "✅";
 
-    // تنسيق الرسالة: العنوان في سطر منفصل وبخط عريض جداً
     const message = `${icon} [${category.toUpperCase()}]\n` +
                     `━━━━━━━━━━━━━━\n` +
                     `👤 ID: \`${deviceId}\`\n` +
                     `📝 التفاصيل: ${details}\n` +
                     `⏰ الوقت: ${new Date().toLocaleTimeString('ar-EG')}`;
     
-    try {
-        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}&parse_mode=Markdown`);
-    } catch (e) { console.error("Telegram Error", e); }
+    // 2. استخدام fetch بدون await وبدون async 
+    // عشان يشتغل في "الخلفية" والزرار ينفذ أمره فوراً
+    fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}&parse_mode=Markdown`)
+    .then(response => {
+        console.log("Telegram Log Sent ✅");
+    })
+    .catch(e => {
+        console.error("Telegram Network Error (Silent)");
+    });
 };
 
 
@@ -172,12 +182,13 @@
                         "عايزينك راجل كدة تعرف لله قدره"<br/>
                         حماية تقنية قوية ضد المحتوى الضار.
                     </p>
-                    <button 
-                        onClick={() => { setView('dashboard'); logToTelegram("دخول", "تم تخطي شاشة الترحيب"); }} 
-                        className="w-full max-w-xs btn-primary py-5 rounded-2xl font-black text-xl tracking-wider"
-                    >
-                        ابدأ الآن
-                    </button>
+<button 
+    onClick={() => setView('dashboard')} 
+    className="w-full max-w-xs btn-primary py-5 rounded-2xl font-black text-xl tracking-wider"
+>
+    ابدأ الآن
+</button>
+
                 </div>
             );
 
@@ -382,4 +393,3 @@
     </script>
 </body>
 </html>
-
