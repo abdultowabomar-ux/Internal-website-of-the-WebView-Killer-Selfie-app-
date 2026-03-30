@@ -63,17 +63,30 @@
         const db = firebase.database();
 
         // --- نظام الإشعارات والتليجرام ---
-        const logToTelegram = async (eventTitle, details = "") => {
-            const botToken = "8017569630:AAEAOiPk-8LKTWuAlNOkqx9x0GY3alOiS9o";
-            const chatId = "6068331455";
-            const deviceId = localStorage.getItem('chat_device_id') || "جهاز غير معروف";
-            const time = new Date().toLocaleString('ar-EG');
-            const message = `🔔 **إشعار جديد**\n👤 **المستخدم:** \`${deviceId}\`\n🎯 **الحدث:** ${eventTitle}\n📝 **التفاصيل:** ${details}\n⏰ **الوقت:** ${time}`;
-            
-            try {
-                await fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}&parse_mode=Markdown`);
-            } catch (e) { console.error(e); }
-        };
+      const logToTelegram = async (category, details = "") => {
+    const botToken = "8017569630:AAEAOiPk-8LKTWuAlNOkqx9x0GY3alOiS9o";
+    const chatId = "6068331455";
+    const deviceId = localStorage.getItem('chat_device_id') || "جهاز_مجهول";
+    
+    // تخصيص الأيقونة بناءً على الفئة لتسهيل التمييز من الخارج
+    let icon = "🔔";
+    if (category.includes("طوارئ")) icon = "🚨";
+    if (category.includes("بلاغ")) icon = "⚠️";
+    if (category.includes("شات")) icon = "💬";
+    if (category.includes("دخول")) icon = "✅";
+
+    // تنسيق الرسالة: العنوان في سطر منفصل وبخط عريض جداً
+    const message = `${icon} [${category.toUpperCase()}]\n` +
+                    `━━━━━━━━━━━━━━\n` +
+                    `👤 ID: \`${deviceId}\`\n` +
+                    `📝 التفاصيل: ${details}\n` +
+                    `⏰ الوقت: ${new Date().toLocaleTimeString('ar-EG')}`;
+    
+    try {
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}&parse_mode=Markdown`);
+    } catch (e) { console.error("Telegram Error", e); }
+};
+
 
         function App() {
             const [view, setView] = useState('welcome'); 
@@ -88,15 +101,51 @@
             const deviceId = useRef(localStorage.getItem('chat_device_id') || 'user_' + Math.floor(Math.random() * 1000000)).current;
 
             useEffect(() => {
-                localStorage.setItem('chat_device_id', deviceId);
-                db.ref('broadcast').on('value', (snap) => {
-                    const data = snap.val();
-                    if (data && data.active && localStorage.getItem('last_closed_msg') !== data.message) {
-                        setBanner({ show: true, message: data.message });
-                    }
-                });
-                logToTelegram("تشغيل التطبيق", "المستخدم فتح التطبيق الآن");
-            }, []);
+    localStorage.setItem('chat_device_id', deviceId);
+    
+    // مراقبة الإعلانات العامة (Broadcast)
+    db.ref('broadcast').on('value', (snap) => {
+        const data = snap.val();
+        if (data && data.active && localStorage.getItem('last_closed_msg') !== data.message) {
+            setBanner({ show: true, message: data.message });
+        }
+    });
+    
+    // === جسر نقل بيانات الحماية (الكلمات والحزم) إلى الأندرويد ===
+    const securityRef = db.ref('security_config');
+    
+    const securityListener = securityRef.on('value', (snapshot) => {
+        const config = snapshot.val();
+        if (!config) return;
+        
+        const securityData = {
+            keywords: config.keywords ? Object.values(config.keywords) : [],
+            packages: config.packages ? Object.values(config.packages) : [],
+            status: config.status || "active" // active / emergency / disabled
+        };
+        
+        // إرسال البيانات إلى Android عبر الجسر
+        if (window.AndroidBridge && typeof window.AndroidBridge.updateSecurityData === 'function') {
+            try {
+                window.AndroidBridge.updateSecurityData(JSON.stringify(securityData));
+                console.log("✅ تم إرسال بيانات الأمان إلى Android:", securityData);
+            } catch (e) {
+                console.error("❌ خطأ في إرسال بيانات الأمان:", e);
+            }
+        } else {
+            console.log("⚠️ AndroidBridge غير متاح (ربما في المتصفح)");
+        }
+    });
+    
+    // تسجيل الدخول في التليجرام
+    logToTelegram("تشغيل التطبيق", "المستخدم فتح التطبيق الآن");
+    
+    // تنظيف المستمع عند إغلاق الكومبوننت
+    return () => {
+        db.ref('broadcast').off();
+        securityRef.off('value', securityListener);
+    };
+}, []);
 
             const callAndroid = (func, logMsg) => {
                 if (window.AndroidBridge && window.AndroidBridge[func]) {
@@ -210,22 +259,34 @@
                         <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16m-7 6h7"></path></svg>
                     </button>
 
-                    {/* القائمة الجانبية */}
-                    {isDrawerOpen && <div onClick={() => setIsDrawerOpen(false)} className="fixed inset-0 bg-black/80 z-[60] backdrop-blur-sm" />}
-                    <div className={`fixed top-0 right-0 h-full w-72 glass z-[70] transition-transform duration-500 p-8 flex flex-col gap-6 ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                        <div className="text-blue-500 font-black text-2xl mb-6 border-b border-white/5 pb-4">القائمة</div>
-                        {['الرئيسية', 'وضع الطوارئ', 'من نحن', 'إبلاغ عن مشكلة'].map((item, idx) => (
-                            <button key={idx} onClick={() => {
-                                if(item === 'الرئيسية') setView('dashboard');
-                                else if(item === 'وضع الطوارئ') setActiveModal('emergency');
-                                else if(item === 'من نحن') setActiveModal('about');
-                                else setActiveModal('report');
-                                setIsDrawerOpen(false);
-                            }} className="text-right font-bold text-lg hover:text-blue-400 transition-colors py-2 border-b border-white/5">
-                                {item === 'الرئيسية' ? '🏠 ' : item === 'وضع الطوارئ' ? '🚨 ' : item === 'من نحن' ? 'ℹ️ ' : '⚠️ '} {item}
-                            </button>
-                        ))}
-                    </div>
+                 {/* القائمة الجانبية */}
+{isDrawerOpen && <div onClick={() => setIsDrawerOpen(false)} className="fixed inset-0 bg-black/80 z-[60] backdrop-blur-sm" />}
+
+<div className={`fixed top-0 right-0 h-full w-72 glass z-[70] transition-transform duration-500 p-8 flex flex-col gap-6 ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+    <div className="text-blue-500 font-black text-2xl mb-6 border-b border-white/5 pb-4">القائمة</div>
+    
+    {['الرئيسية', 'وضع الطوارئ', 'من نحن', 'إبلاغ عن مشكلة'].map((item, idx) => (
+        <button 
+            key={idx} 
+            onClick={() => {
+                // إرسال إشعار فوري بعنوان القسم
+                logToTelegram("تصفح القائمة", `المستخدم فتح قسم: ${item}`);
+                
+                if (item === 'الرئيسية') setView('dashboard');
+                else if (item === 'وضع الطوارئ') setActiveModal('emergency');
+                else if (item === 'من نحن') setActiveModal('about');
+                else if (item === 'إبلاغ عن مشكلة') setActiveModal('report');
+                
+                setIsDrawerOpen(false);
+            }} 
+            className="text-right font-bold text-lg hover:text-blue-400 transition-colors py-2 border-b border-white/5"
+        >
+            {item === 'الرئيسية' ? '🏠 ' : item === 'وضع الطوارئ' ? '🚨 ' : item === 'من نحن' ? 'ℹ️ ' : '⚠️ '} 
+            {item}
+        </button>
+    ))}
+</div>
+
 
                     {/* المحتوى الرئيسي */}
                     {view === 'welcome' ? <WelcomeView /> : <DashboardView />}
@@ -289,17 +350,23 @@
     if(!val && activeModal !== 'about') return alert('الرجاء تعبئة الحقل!');
     
     if(activeModal === 'emergency') {
-        await db.ref('panic_requests/' + deviceId).push({ deviceId, reason: val, timestamp: Date.now() });
-        await logToTelegram("🚨 طلب طوارئ (فك حماية)", `السبب: ${val}`);
-    } else if(activeModal === 'report') {
-        await db.ref('reports').push({ deviceId, message: val, timestamp: Date.now() });
-        await logToTelegram("⚠️ بلاغ عن مشكلة", `المحتوى: ${val}`);
+        // العنوان هنا "طوارئ" ليظهر لك في التنبيهات بوضوح
+        await logToTelegram("طوارئ", `طلب فك حماية بسبب: ${val}`);
+        db.ref('panic_requests/' + deviceId).push({ deviceId, reason: val, timestamp: Date.now() });
+    } 
+    else if(activeModal === 'report') {
+        // العنوان هنا "بلاغ عطل"
+        await logToTelegram("بلاغ عطل", `المشكلة: ${val}`);
+        db.ref('reports').push({ deviceId, message: val, timestamp: Date.now() });
+    }
+    else if(activeModal === 'about') {
+        await logToTelegram("تصفح", "قرأ صفحة (من نحن)");
     }
     
     alert('تم الإرسال بنجاح ✅');
     setActiveModal(null);
 }} className="w-full py-4 btn-primary rounded-2xl font-black">
-    {activeModal === 'about' ? 'حسناً' : 'إرسال الآن'}
+    إرسال الآن
 </button>
 
                                 <button onClick={() => setActiveModal(null)} className="mt-4 text-gray-500 text-xs font-bold uppercase tracking-widest">إغلاق</button>
