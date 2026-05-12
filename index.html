@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -13,37 +12,44 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Tajawal', sans-serif; background: #080b10; color: #f0f6fc; margin: 0; overflow-x: hidden; }
+        body { font-family: 'Tajawal', sans-serif; background: #050212; color: #f0f6fc; margin: 0; overflow-x: hidden; }
         
-        /* تأثير الخلفية المتحركة */
+        /* تأثير الخلفية المتدرجة الجديدة (بنفسجي لأزرق غامق) */
         .bg-animate {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at 50% 50%, #161b22 0%, #080b10 100%);
+            background: linear-gradient(135deg, #0f0524 0%, #050212 50%, #020a1a 100%);
             z-index: -1;
         }
 
-        .glass { background: rgba(22, 27, 34, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(88, 166, 255, 0.1); }
-        .neon-glow { text-shadow: 0 0 15px rgba(88, 166, 255, 0.6); }
-        .fade-in { animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        .glass { background: rgba(15, 10, 31, 0.6); backdrop-filter: blur(25px); border: 1px solid rgba(139, 92, 246, 0.15); }
+        .neon-purple { text-shadow: 0 0 20px rgba(139, 92, 246, 0.7); color: #a78bfa; }
+        .fade-in { animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
         
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         
-        .pulse-blue { animation: pulse 2.5s infinite; }
+        .pulse-purple { animation: pulse 3s infinite; }
         @keyframes pulse { 
-            0% { box-shadow: 0 0 0 0 rgba(88, 166, 255, 0.4); } 
-            70% { box-shadow: 0 0 0 15px rgba(88, 166, 255, 0); } 
-            100% { box-shadow: 0 0 0 0 rgba(88, 166, 255, 0); } 
+            0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.3); } 
+            70% { box-shadow: 0 0 0 20px rgba(139, 92, 246, 0); } 
+            100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); } 
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
-            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+        .btn-purple {
+            background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
+            box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.4);
             transition: all 0.3s ease;
         }
-        .btn-primary:active { transform: scale(0.95); box-shadow: 0 5px 10px -3px rgba(37, 99, 235, 0.4); }
+        .btn-danger {
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: #ef4444;
+        }
 
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 10px; }
+        .quran-frame {
+            border: 2px solid transparent;
+            background: linear-gradient(#050212, #050212) padding-box,
+                        linear-gradient(135deg, #7c3aed, #2563eb) border-box;
+        }
     </style>
 </head>
 <body>
@@ -53,7 +59,7 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- تهيئة Firebase ---
+        // تهيئة Firebase (كما هي)
         const firebaseConfig = {
             apiKey: "AIzaSyCaFZNgxoXnjuh-0zlQ8lp8pVp2YUMmsp4",
             databaseURL: "https://thesalafikiller-default-rtdb.firebaseio.com/",
@@ -62,328 +68,99 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // --- نظام الإشعارات والتليجرام ---
-    const logToTelegram = (category, details = "") => {
-    // 1. التحقق من وجود إنترنت قبل البدء (لتجنب تعليق المتصفح)
-    if (!navigator.onLine) {
-        console.log("Offline: Telegram log skipped.");
-        return;
-    }
-
-    const botToken = "8017569630:AAEAOiPk-8LKTWuAlNOkqx9x0GY3alOiS9o";
-    const chatId = "6068331455";
-    const deviceId = localStorage.getItem('chat_device_id') || "جهاز_مجهول";
-    
-    let icon = "🔔";
-    if (category.includes("طوارئ")) icon = "🚨";
-    if (category.includes("بلاغ")) icon = "⚠️";
-    if (category.includes("شات")) icon = "💬";
-    if (category.includes("دخول")) icon = "✅";
-
-    const message = `${icon} [${category.toUpperCase()}]\n` +
-                    `━━━━━━━━━━━━━━\n` +
-                    `👤 ID: \`${deviceId}\`\n` +
-                    `📝 التفاصيل: ${details}\n` +
-                    `⏰ الوقت: ${new Date().toLocaleTimeString('ar-EG')}`;
-    
-    // 2. استخدام fetch بدون await وبدون async 
-    // عشان يشتغل في "الخلفية" والزرار ينفذ أمره فوراً
-    fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}&parse_mode=Markdown`)
-    .then(response => {
-        console.log("Telegram Log Sent ✅");
-    })
-    .catch(e => {
-        console.error("Telegram Network Error (Silent)");
-    });
-};
-
+        // نظام التليجرام (كما هو)
+        const logToTelegram = (category, details = "") => {
+            if (!navigator.onLine) return;
+            const botToken = "8017569630:AAEAOiPk-8LKTWuAlNOkqx9x0GY3alOiS9o";
+            const chatId = "6068331455";
+            const deviceId = localStorage.getItem('chat_device_id') || "جهاز_مجهول";
+            const message = `🟣 [${category.toUpperCase()}]\nID: ${deviceId}\nالتفاصيل: ${details}`;
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`);
+        };
 
         function App() {
-            const [view, setView] = useState('welcome'); 
-            const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-            const [activeModal, setActiveModal] = useState(null); 
-            const [banner, setBanner] = useState({ show: false, message: '' });
-            const [chatOpen, setChatOpen] = useState(false);
-            const [chatMode, setChatMode] = useState('public'); 
-            const [messages, setMessages] = useState([]);
-            const [chatInput, setChatInput] = useState('');
-            
+            const [view, setView] = useState('welcome');
+            const [activeModal, setActiveModal] = useState(null);
+            const [passInput, setPassInput] = useState('');
             const deviceId = useRef(localStorage.getItem('chat_device_id') || 'user_' + Math.floor(Math.random() * 1000000)).current;
 
-            useEffect(() => {
-    localStorage.setItem('chat_device_id', deviceId);
-    
-    // مراقبة الإعلانات العامة (Broadcast)
-    db.ref('broadcast').on('value', (snap) => {
-        const data = snap.val();
-        if (data && data.active && localStorage.getItem('last_closed_msg') !== data.message) {
-            setBanner({ show: true, message: data.message });
-        }
-    });
-    
-    // === جسر نقل بيانات الحماية (الكلمات والحزم) إلى الأندرويد ===
-    const securityRef = db.ref('security_config');
-    
-    const securityListener = securityRef.on('value', (snapshot) => {
-        const config = snapshot.val();
-        if (!config) return;
-        
-        const securityData = {
-            keywords: config.keywords ? Object.values(config.keywords) : [],
-            packages: config.packages ? Object.values(config.packages) : [],
-            status: config.status || "active" // active / emergency / disabled
-        };
-        
-        // إرسال البيانات إلى Android عبر الجسر
-        if (window.AndroidBridge && typeof window.AndroidBridge.updateSecurityData === 'function') {
-            try {
-                window.AndroidBridge.updateSecurityData(JSON.stringify(securityData));
-                console.log("✅ تم إرسال بيانات الأمان إلى Android:", securityData);
-            } catch (e) {
-                console.error("❌ خطأ في إرسال بيانات الأمان:", e);
-            }
-        } else {
-            console.log("⚠️ AndroidBridge غير متاح (ربما في المتصفح)");
-        }
-    });
-    
-    // تسجيل الدخول في التليجرام
-    logToTelegram("تشغيل التطبيق", "المستخدم فتح التطبيق الآن");
-    
-    // تنظيف المستمع عند إغلاق الكومبوننت
-    return () => {
-        db.ref('broadcast').off();
-        securityRef.off('value', securityListener);
-    };
-}, []);
-
-            const callAndroid = (func, logMsg) => {
-                if (window.AndroidBridge && window.AndroidBridge[func]) {
-                    window.AndroidBridge[func]();
-                    logToTelegram("أمر نظام", logMsg);
+            const handleDisableRequest = () => {
+                // نداء دالة الجافا لفتح نافذة الباسورد (أو التعامل معها هنا)
+                if (window.AndroidBridge && window.AndroidBridge.requestDisableWithPassword) {
+                    window.AndroidBridge.requestDisableWithPassword();
+                    logToTelegram("طلب تعطيل", "المستخدم ضغط على زر تعطيل الخدمة");
                 } else {
-                    logToTelegram("محاكاة متصفح", `طلب: ${func}`);
-                    alert(`أمر ${func} يعمل فقط داخل التطبيق الأندرويد`);
+                    alert("هذه الميزة تعمل فقط داخل التطبيق");
                 }
             };
 
-            // --- مكون شاشة الترحيب ---
             const WelcomeView = () => (
                 <div className="h-screen flex flex-col items-center justify-center p-8 text-center fade-in">
-                    <div className="w-64 h-72 glass rounded-[40px] overflow-hidden mb-10 border-2 border-blue-500/20 shadow-2xl pulse-blue">
-                        <img src="./IMG-20260330-WA0001.jpg" className="w-full h-full object-cover" 
-                             onError={(e) => e.target.src='https://via.placeholder.com/280x320/161b22/58a6ff?text=SALAFI+PRO'} />
+                    <div className="w-full max-w-sm quran-frame p-8 rounded-[40px] mb-10 shadow-2xl pulse-purple glass">
+                        <div className="text-purple-400 text-3xl mb-4 italic">﷽</div>
+                        <h2 className="text-xl font-bold leading-loose text-gray-200">
+                            "وَأَمَّا مَنْ خَافَ مَقَامَ رَبِّهِ وَنَهَى النَّفْسَ عَنِ الْهَوَى ۝ فَإِنَّ الْجَنَّةَ هِيَ الْمَأْوَى"
+                        </h2>
+                        <div className="mt-4 h-1 w-16 bg-gradient-to-r from-purple-500 to-blue-500 mx-auto rounded-full"></div>
                     </div>
+                    
                     <h1 className="text-4xl font-black mb-4 leading-tight">
-                        مرحباً بك في <br/>
-                        <span className="text-blue-500 neon-glow">The Killer Salafi</span>
+                        The Killer <span className="neon-purple">Salafi</span>
                     </h1>
-                    <p className="text-gray-400 text-sm mb-12 px-6 italic leading-relaxed">
-                        "عايزينك راجل كدة تعرف لله قدره"<br/>
-                        حماية تقنية قوية ضد المحتوى الضار.
+                    <p className="text-gray-400 text-sm mb-12 italic">
+                        "الرجولة أفعال، وأول فعل هو ضبط النفس"<br/>
+                        م. عمر عبد التواب
                     </p>
-<button 
-    onClick={() => setView('dashboard')} 
-    className="w-full max-w-xs btn-primary py-5 rounded-2xl font-black text-xl tracking-wider"
->
-    ابدأ الآن
-</button>
-
+                    
+                    <button onClick={() => setView('dashboard')} className="w-full max-w-xs btn-purple py-5 rounded-2xl font-black text-xl">
+                        دخول الحصن
+                    </button>
                 </div>
             );
 
-            // --- مكون لوحة التحكم ---
-            const DashboardView = () => {
-                const [dnsOpen, setDnsOpen] = useState(false);
-                return (
-                    <div className="min-h-screen pt-20 px-6 pb-24 fade-in flex flex-col items-center">
-                        <div className="text-6xl font-black text-blue-500 mb-6 neon-glow">{"< / >"}</div>
-                        <h2 className="text-2xl font-black tracking-widest uppercase italic mb-2">THE KILLER SALAFI</h2>
-                        <span className="text-blue-400 text-sm font-bold block mb-4">" نسعى لبناء جيل قوي "</span>
-                        
-                        <div className="w-full max-w-sm space-y-5 mt-4">
-                            <div className="p-1 rounded-2xl bg-gradient-to-r from-blue-500 to-transparent">
-                                <button onClick={() => callAndroid('activateProtection', 'تفعيل الحماية')} className="w-full p-5 rounded-2xl glass flex items-center justify-between">
-                                    <span className="flex items-center gap-3 font-black text-blue-100">🛡️ تشغيل الحماية الغاشمة</span>
-                                    <span className="text-blue-500 animate-pulse">●</span>
-                                </button>
-                            </div>
-                            
-                            <button onClick={() => callAndroid('requestDeviceAdmin', 'طلب المسؤول')} className="w-full p-4 rounded-2xl border border-emerald-500/30 text-emerald-400 font-bold glass bg-emerald-500/5">صلاحية المسؤول 🔑</button>
-                            
-                            <button onClick={() => callAndroid('requestBatteryExemption', 'إذن البطارية')} className="w-full p-4 rounded-2xl border border-orange-500/30 text-orange-400 font-bold glass bg-orange-500/5">استمرار الحماية بالخلفية ⚡</button>
-                            
-                            <div className="glass rounded-2xl overflow-hidden border border-white/5 shadow-xl">
-                                <button onClick={() => setDnsOpen(!dnsOpen)} className="w-full p-5 text-blue-400 font-black flex justify-between items-center">
-                                    <span>🌐 DNS الحماية العائلية</span>
-                                    <span>{dnsOpen ? '▲' : '▼'}</span>
-                                </button>
-                                {dnsOpen && (
-                                    <div className="p-5 bg-black/40 border-t border-white/5 space-y-4 fade-in">
-                                        <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 text-center">
-                                            <code className="text-blue-300 text-xs">family.cloudflare-dns.com</code>
-                                        </div>
-                                        <button onClick={() => callAndroid('openDnsSettings', 'فتح إعدادات DNS')} className="w-full py-4 btn-primary rounded-xl text-xs font-black">ضبط الإعدادات في النظام</button>
-                                    </div>
-                                )}
-                            </div>
+            const DashboardView = () => (
+                <div className="min-h-screen pt-20 px-6 pb-24 fade-in flex flex-col items-center">
+                    <div className="text-5xl font-black text-purple-500 mb-6 neon-purple">🛡️</div>
+                    <h2 className="text-2xl font-black tracking-widest italic mb-2">لوحة التحكم</h2>
+                    <span className="text-purple-400 text-xs font-bold block mb-8">إِنَّ اللَّهَ مَعَ الَّذِينَ اتَّقَوا</span>
+
+                    <div className="w-full max-w-sm space-y-4">
+                        <button onClick={() => window.AndroidBridge?.activateProtection()} className="w-full p-6 rounded-2xl glass border-l-4 border-purple-500 flex items-center justify-between group active:scale-95 transition-all">
+                            <span className="font-black text-purple-100">تفعيل حماية المحتوى</span>
+                            <span className="text-purple-500 group-hover:animate-ping">✦</span>
+                        </button>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <button onClick={() => window.AndroidBridge?.requestDeviceAdmin()} className="p-4 rounded-2xl glass border border-blue-500/20 text-blue-300 font-bold text-sm">المسؤول 🔑</button>
+                            <button onClick={() => window.AndroidBridge?.requestBatteryExemption()} className="p-4 rounded-2xl glass border border-purple-500/20 text-purple-300 font-bold text-sm">البطارية ⚡</button>
                         </div>
+
+                        <div className="p-6 glass rounded-3xl border border-white/5 text-center">
+                            <p className="text-xs text-gray-400 mb-4 italic leading-relaxed">
+                                "إذا أردت أن تصل لما لم يصل إليه غيرك، فافعل ما لا يفعله غيرك من الصبر"
+                            </p>
+                            <button onClick={() => window.AndroidBridge?.openDnsSettings()} className="text-blue-400 text-xs font-black underline">ضبط الـ DNS العائلي</button>
+                        </div>
+
+                        {/* زر تعطيل الخدمة الجديد */}
+                        <button 
+                            onClick={handleDisableRequest}
+                            className="w-full py-4 rounded-2xl btn-danger font-black text-sm mt-8 opacity-60 hover:opacity-100 transition-opacity"
+                        >
+                            تعطيل الخدمة (يحتاج باسورد)
+                        </button>
                     </div>
-                );
-            };
-
-            // --- إدارة الشات ---
-            useEffect(() => {
-                if (chatOpen) {
-                    const path = chatMode === 'public' ? 'public_chat' : `private_chats/${deviceId}`;
-                    const listener = db.ref(path).limitToLast(30).on('value', snap => {
-                        const msgs = [];
-                        snap.forEach(child => { msgs.push({ id: child.key, ...child.val() }); });
-                        setMessages(msgs);
-                    });
-                    return () => db.ref(path).off('value', listener);
-                }
-            }, [chatOpen, chatMode]);
-
-            const sendMessage = () => {
-                if (!chatInput.trim()) return;
-                const path = chatMode === 'public' ? 'public_chat' : `private_chats/${deviceId}`;
-                db.ref(path).push({ sender: deviceId, text: chatInput, timestamp: Date.now() });
-                setChatInput('');
-            };
+                </div>
+            );
 
             return (
                 <div className="relative min-h-screen">
-                    {/* التحديثات العائمة */}
-                    {banner.show && (
-                        <div className="fixed top-20 left-4 right-4 z-[100] glass p-4 rounded-2xl border-l-4 border-blue-500 fade-in shadow-2xl">
-                            <div className="flex justify-between items-start mb-2">
-                                <b className="text-blue-400 text-sm">📢 إعلان المطور</b>
-                                <button onClick={() => { localStorage.setItem('last_closed_msg', banner.message); setBanner({ ...banner, show: false }) }} className="text-gray-500">✕</button>
-                            </div>
-                            <p className="text-xs text-gray-300 leading-relaxed">{banner.message}</p>
-                        </div>
-                    )}
-
-                    {/* زر المنيو */}
-                    <button onClick={() => setIsDrawerOpen(true)} className="fixed top-6 right-6 z-50 p-3 glass rounded-2xl shadow-lg active:scale-90 transition-transform">
-                        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-                    </button>
-
-                 {/* القائمة الجانبية */}
-{isDrawerOpen && <div onClick={() => setIsDrawerOpen(false)} className="fixed inset-0 bg-black/80 z-[60] backdrop-blur-sm" />}
-
-<div className={`fixed top-0 right-0 h-full w-72 glass z-[70] transition-transform duration-500 p-8 flex flex-col gap-6 ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-    <div className="text-blue-500 font-black text-2xl mb-6 border-b border-white/5 pb-4">القائمة</div>
-    
-    {['الرئيسية', 'وضع الطوارئ', 'من نحن', 'إبلاغ عن مشكلة'].map((item, idx) => (
-        <button 
-            key={idx} 
-            onClick={() => {
-                // إرسال إشعار فوري بعنوان القسم
-                logToTelegram("تصفح القائمة", `المستخدم فتح قسم: ${item}`);
-                
-                if (item === 'الرئيسية') setView('dashboard');
-                else if (item === 'وضع الطوارئ') setActiveModal('emergency');
-                else if (item === 'من نحن') setActiveModal('about');
-                else if (item === 'إبلاغ عن مشكلة') setActiveModal('report');
-                
-                setIsDrawerOpen(false);
-            }} 
-            className="text-right font-bold text-lg hover:text-blue-400 transition-colors py-2 border-b border-white/5"
-        >
-            {item === 'الرئيسية' ? '🏠 ' : item === 'وضع الطوارئ' ? '🚨 ' : item === 'من نحن' ? 'ℹ️ ' : '⚠️ '} 
-            {item}
-        </button>
-    ))}
-</div>
-
-
-                    {/* المحتوى الرئيسي */}
                     {view === 'welcome' ? <WelcomeView /> : <DashboardView />}
-
-                    {/* الأزرار العائمة - تظهر فقط بعد الدخول */}
-                    {view === 'dashboard' && (
-                        <div className="fixed bottom-8 inset-x-8 flex justify-between items-end z-40">
-                            <button onClick={() => setChatOpen(!chatOpen)} className="w-16 h-16 btn-primary rounded-3xl flex items-center justify-center text-3xl shadow-blue-500/50">💬</button>
-                            
-                            <div className="flex flex-col items-center gap-2" onClick={() => window.open('https://wa.me/201202763155')}>
-                                <div className="w-16 h-16 bg-[#25D366] rounded-3xl flex items-center justify-center shadow-lg shadow-green-500/40 active:scale-90 transition-all">
-                                    <svg viewBox="0 0 448 512" width="30" fill="white"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-5.5-2.8-23.2-8.5-44.2-27.1-16.4-14.6-27.4-32.7-30.6-38.2-3.2-5.6-.3-8.6 2.4-11.3 2.5-2.4 5.5-6.5 8.3-9.7 2.8-3.3 3.7-5.6 5.5-9.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 13.2 5.8 23.5 9.2 31.5 11.8 13.3 4.2 25.4 3.6 35 2.2 10.7-1.5 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
-                                </div>
-                                <span className="text-[10px] font-black text-emerald-500">WHATSAPP</span>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* نافذة الشات */}
-                    {chatOpen && (
-                        <div className="fixed inset-x-4 bottom-28 h-[500px] glass z-[90] rounded-[35px] flex flex-col overflow-hidden shadow-2xl border border-white/5 fade-in">
-                            <div className="btn-primary p-5 flex justify-between items-center">
-                                <span className="font-black text-sm">{chatMode === 'public' ? 'المجتمع العام 🌍' : 'مراسلة المطور 🔒'}</span>
-                                <div className="flex gap-2">
-                                    <button onClick={() => setChatMode(chatMode === 'public' ? 'private' : 'public')} className="bg-black/20 px-3 py-1 rounded-lg text-[10px] font-bold">تبديل</button>
-                                    <button onClick={() => setChatOpen(false)} className="bg-black/20 w-8 h-8 rounded-full">✕</button>
-                                </div>
-                            </div>
-                            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-black/10">
-                                {messages.map(m => (
-                                    <div key={m.id} className={`max-w-[80%] p-4 rounded-[20px] text-xs font-bold ${m.sender === deviceId ? 'bg-blue-600 self-end rounded-tr-none' : 'bg-gray-800 self-start rounded-tl-none'}`}>
-                                        {m.text}
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="p-4 flex gap-2 glass">
-                                <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && sendMessage()} className="flex-1 bg-white/5 rounded-2xl px-5 outline-none text-sm border border-white/5" placeholder="رسالتك..." />
-                                <button onClick={sendMessage} className="w-12 h-12 btn-primary rounded-2xl flex items-center justify-center">➤</button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* النوافذ (Modals) */}
-                    {activeModal && (
-                        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/90 backdrop-blur-md">
-                            <div className="glass p-8 rounded-[40px] w-full max-w-sm text-center fade-in border border-blue-500/20">
-                                <h2 className={`text-2xl font-black mb-4 ${activeModal === 'emergency' ? 'text-red-500' : 'text-blue-500'}`}>
-                                    {activeModal === 'about' ? 'ℹ️ من نحن' : activeModal === 'emergency' ? '🚨 طوارئ' : '⚠️ بلاغ'}
-                                </h2>
-                                <p className="text-gray-400 text-sm mb-6 leading-relaxed italic">
-                                    {activeModal === 'about' && "مشروع يهدف لحماية الشباب من الأضرار الرقمية باستخدام أحدث تقنيات الحجب والفلترة."}
-                                    {activeModal === 'emergency' && "اكتب سبب التعطيل ليتم مراجعته من قبل م. عمر."}
-                                    {activeModal === 'report' && "صادفت مشكلة؟ أخبرنا بها فوراً."}
-                                </p>
-                                {activeModal !== 'about' && (
-                                    <textarea id="modal-input" className="w-full h-24 bg-black/40 border border-white/5 rounded-2xl p-4 mb-4 outline-none focus:border-blue-500 text-sm" placeholder="اكتب هنا..."></textarea>
-                                )}
-                     
-<button onClick={async () => {
-    const val = document.getElementById('modal-input')?.value;
-    if(!val && activeModal !== 'about') return alert('الرجاء تعبئة الحقل!');
-    
-    if(activeModal === 'emergency') {
-        // العنوان هنا "طوارئ" ليظهر لك في التنبيهات بوضوح
-        await logToTelegram("طوارئ", `طلب فك حماية بسبب: ${val}`);
-        db.ref('panic_requests/' + deviceId).push({ deviceId, reason: val, timestamp: Date.now() });
-    } 
-    else if(activeModal === 'report') {
-        // العنوان هنا "بلاغ عطل"
-        await logToTelegram("بلاغ عطل", `المشكلة: ${val}`);
-        db.ref('reports').push({ deviceId, message: val, timestamp: Date.now() });
-    }
-    else if(activeModal === 'about') {
-        await logToTelegram("تصفح", "قرأ صفحة (من نحن)");
-    }
-    
-    alert('تم الإرسال بنجاح ✅');
-    setActiveModal(null);
-}} className="w-full py-4 btn-primary rounded-2xl font-black">
-    إرسال الآن
-</button>
-
-                                <button onClick={() => setActiveModal(null)} className="mt-4 text-gray-500 text-xs font-bold uppercase tracking-widest">إغلاق</button>
-                            </div>
-                        </div>
-                    )}
+                    
+                    {/* زر المنيو */}
+                    <button onClick={() => alert('القائمة قيد التطوير')} className="fixed top-6 right-6 z-50 p-3 glass rounded-2xl">
+                        <svg width="24" height="24" fill="none" stroke="#a78bfa" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
                 </div>
             );
         }
@@ -393,3 +170,4 @@
     </script>
 </body>
 </html>
+
